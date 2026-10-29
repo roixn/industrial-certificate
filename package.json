@@ -1,0 +1,29 @@
+{
+  "name": "industrial-training-certificate-management-system",
+  "version": "1.0.0",
+  "description": "Production-ready 45 Days Industrial Training Certificate Management & Verification System",
+  "private": true,
+  "scripts": {
+    "server": "cd backend && node src/server.js",
+    "client": "cd frontend && node ./node_modules/vite/bin/vite.js",
+    "seed": "cd backend && node src/scripts/seedAdmin.js",
+    "seed:demo": "cd backend && node src/scripts/seedDemoData.js",
+    "test": "cd backend && node --test tests/*.test.js",
+    "build": "cd frontend && node ./node_modules/vite/bin/vite.js build"
+  },
+  "keywords": [
+    "certificate",
+    "verification",
+    "industrial-training",
+    "qr-code",
+    "pdfkit",
+    "mongodb",
+    "react",
+    "vite"
+  ],
+  "author": "Nexora Innovations",
+  "license": "ISC",
+  "devDependencies": {
+    "vercel": "^65.7.0"
+  }
+}

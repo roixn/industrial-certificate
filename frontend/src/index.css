@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4 {
+    @apply tracking-tight text-slate-900;
+  }
+}
+
+/* Laser Scanning Animation */
+@keyframes scan {
+  0% {
+    top: 5%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 92%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scan-line {
+  animation: scan 2.2s ease-in-out infinite;
+}
+
+/* Custom Print Styles for High-Quality Certificate Printing */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #certificate-print-area, #certificate-print-area * {
+    visibility: visible;
+  }
+  #certificate-print-area {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+}
