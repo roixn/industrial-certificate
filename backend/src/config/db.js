@@ -37,7 +37,7 @@ export async function connectDB() {
     }
 
     // 2. Fallback for local environments: persistent embedded MongoDB server
-    if (!connected && !process.env.NETLIFY && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    if (!connected && !process.env.NETLIFY && !process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.VERCEL) {
       console.log('[DB] Initializing embedded persistent MongoDB server...');
       try {
         const { MongoMemoryServer } = await import('mongodb-memory-server');
