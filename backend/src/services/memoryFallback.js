@@ -414,6 +414,11 @@ export function enableMemoryFallback() {
   };
 
   Certificate.create = async function (docData) {
+    if (docData.certificateId && inMemoryCertificates.some((c) => c.certificateId === docData.certificateId)) {
+      const err = new Error(`E11000 duplicate key error collection: certificates index: certificateId_1 dup key: { certificateId: "${docData.certificateId}" }`);
+      err.code = 11000;
+      throw err;
+    }
     const newDoc = {
       _id: makeObjectId(),
       ...docData,
