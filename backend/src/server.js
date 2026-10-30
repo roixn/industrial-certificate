@@ -32,22 +32,11 @@ app.use(
   })
 );
 
-// CORS configuration
-const allowedOrigins = [config.clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'];
+// CORS configuration - allow all origins dynamically with credentials for seamless Vercel / Netlify / custom domain support
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (
-        !origin ||
-        config.nodeEnv === 'development' ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        (process.env.VERCEL_URL && origin.includes(process.env.VERCEL_URL))
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error('Blocked by CORS policy'));
-      }
+      callback(null, true);
     },
     credentials: true,
   })
