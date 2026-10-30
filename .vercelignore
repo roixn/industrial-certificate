@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+backend/.data
+.data
+.git
+.github
+*.log
+.env
+.env*
+backend/tests
+dist
+frontend/dist
+.netlify
