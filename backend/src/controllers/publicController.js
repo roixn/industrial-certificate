@@ -47,7 +47,7 @@ export async function verifyCertificate(req, res, next) {
     }
 
     // Sanitize data: Never expose passwords, internal DB IDs, private admin records
-    const liveDomain = (settings.verificationDomain || 'https://yields-dragon-boulevard-handed.trycloudflare.com/credentials').replace(/\/+$/, '');
+    const liveDomain = (process.env.PUBLIC_VERIFY_BASE_URL || settings.verificationDomain || 'https://nut-disturbed-favourites-situated.trycloudflare.com/credentials').replace(/\/+$/, '');
     const cleanVerificationUrl = cert.qrVerificationUrl && !cert.qrVerificationUrl.includes('localhost') && !cert.qrVerificationUrl.includes('127.0.0.1')
       ? cert.qrVerificationUrl
       : `${liveDomain}/${cert.certificateId}`;

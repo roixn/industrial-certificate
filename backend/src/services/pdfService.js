@@ -183,7 +183,7 @@ export async function generateCertificatePdf(cert) {
       const bottomY = 365;
 
       // Determine live public verification URL (Aadhaar-standard direct camera scan)
-      const defaultDomain = 'https://yields-dragon-boulevard-handed.trycloudflare.com/credentials';
+      const defaultDomain = (process.env.PUBLIC_VERIFY_BASE_URL || 'https://nut-disturbed-favourites-situated.trycloudflare.com/credentials').replace(/\/+$/, '');
       let effectiveQrUrl = cert.qrVerificationUrl;
       if (!effectiveQrUrl || effectiveQrUrl.includes('localhost') || effectiveQrUrl.includes('127.0.0.1')) {
         effectiveQrUrl = `${defaultDomain}/${cert.certificateId}`;

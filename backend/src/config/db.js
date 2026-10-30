@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
+import { ensureInitialSeed } from '../services/seedService.js';
+import { enableMemoryFallback } from '../services/memoryFallback.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,19 +13,19 @@ let memoryServer = null;
 
 export async function connectDB() {
   try {
-    // If connection is already open, reuse it immediately (essential for Vercel Serverless)
+    // If connection is already open, reuse it immediately (essential for serverless)
     if (mongoose.connection.readyState >= 1) {
-      return;
+      return mongoose.connection;
     }
 
     mongoose.set('strictQuery', false);
 
     let connected = false;
 
-    // Check if external MongoDB is explicitly configured and not forcing memory mode
-    if (config.mongodbUri && !config.useMemoryDb) {
+    // 1. Check if external MongoDB is configured
+    if (config.mongodbUri && !config.useMemoryDb && !config.mongodbUri.includes('127.0.0.1')) {
       try {
-        console.log(`[DB] Attempting connection to MongoDB at ${config.mongodbUri}...`);
+        console.log(`[DB] Attempting connection to MongoDB at ${config.mongodbUri.replace(/:[^:@]+@/, ':****@')}...`);
         await mongoose.connect(config.mongodbUri, {
           serverSelectionTimeoutMS: 3000,
         });
@@ -34,8 +36,8 @@ export async function connectDB() {
       }
     }
 
-    // Fallback or default: persistent embedded MongoDB server
-    if (!connected) {
+    // 2. Fallback for local environments: persistent embedded MongoDB server
+    if (!connected && !process.env.NETLIFY && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
       console.log('[DB] Initializing embedded persistent MongoDB server...');
       try {
         const { MongoMemoryServer } = await import('mongodb-memory-server');
@@ -57,19 +59,36 @@ export async function connectDB() {
         console.log(`[DB] Embedded persistent MongoDB connected at ${uri} (storage: ${dbPath})`);
         connected = true;
       } catch (memErr) {
-        console.error('[DB] Embedded MongoDB init error:', memErr.message);
-        // In case persistent engine lock issue, fallback to transient in-memory instance
-        console.log('[DB] Retrying embedded server without custom dbPath...');
-        const { MongoMemoryServer } = await import('mongodb-memory-server');
-        memoryServer = await MongoMemoryServer.create({
-          instance: {
-            dbName: 'industrial_training_certs',
-          },
-        });
-        const uri = memoryServer.getUri();
-        await mongoose.connect(uri);
-        console.log(`[DB] In-memory MongoDB running at ${uri}`);
-        connected = true;
+        console.warn('[DB] Embedded MongoDB init warning:', memErr.message);
+        try {
+          console.log('[DB] Retrying embedded server without custom dbPath...');
+          const { MongoMemoryServer } = await import('mongodb-memory-server');
+          memoryServer = await MongoMemoryServer.create({
+            instance: {
+              dbName: 'industrial_training_certs',
+            },
+          });
+          const uri = memoryServer.getUri();
+          await mongoose.connect(uri);
+          console.log(`[DB] In-memory MongoDB running at ${uri}`);
+          connected = true;
+        } catch (innerErr) {
+          console.error('[DB] Could not start embedded MongoDB:', innerErr.message);
+        }
+      }
+    }
+
+    // 3. Fallback for serverless / Netlify without any Cloud Database
+    if (!connected) {
+      console.log('[DB] Activating Standalone In-Memory Datastore (Zero Cloud Database required).');
+      enableMemoryFallback();
+      connected = true;
+    } else {
+      // Trigger initial seed check on fresh real database connection
+      try {
+        await ensureInitialSeed();
+      } catch (seedErr) {
+        console.warn('[DB] Automatic seed check warning:', seedErr.message);
       }
     }
 
@@ -79,8 +98,9 @@ export async function connectDB() {
 
     return mongoose.connection;
   } catch (err) {
-    console.error('[DB] Critical database connection error:', err);
-    throw err;
+    console.error('[DB] Critical database connection error, falling back to in-memory store:', err.message);
+    enableMemoryFallback();
+    return mongoose.connection;
   }
 }
 

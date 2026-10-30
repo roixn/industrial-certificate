@@ -21,6 +21,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust proxy for reverse proxies (Netlify, Cloudflare, Render, AWS, Nginx)
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(
   helmet({
@@ -34,7 +37,13 @@ const allowedOrigins = [config.clientUrl, 'http://localhost:5173', 'http://127.0
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin) || config.nodeEnv === 'development') {
+      if (
+        !origin ||
+        config.nodeEnv === 'development' ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        (process.env.VERCEL_URL && origin.includes(process.env.VERCEL_URL))
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by CORS policy'));
@@ -51,6 +60,16 @@ app.use(cookieParser(config.cookieSecret));
 if (config.nodeEnv !== 'test') {
   app.use(morgan('dev'));
 }
+
+// Ensure active database connection for all requests (critical for serverless / cold starts)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Health Check
 app.get('/api/health', (req, res) => {

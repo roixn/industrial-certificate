@@ -11,7 +11,7 @@ export default function CertificatePreview({ cert, showActions = true, onDownloa
       ? cert.qrVerificationUrl
       : cert?.certificateId
       ? `${window.location.origin}/credentials/${cert.certificateId}`
-      : 'https://yields-dragon-boulevard-handed.trycloudflare.com/credentials';
+      : 'https://nut-disturbed-favourites-situated.trycloudflare.com/credentials';
 
   useEffect(() => {
     if (verificationUrl) {
