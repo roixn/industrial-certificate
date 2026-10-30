@@ -287,6 +287,30 @@ function matchQuery(item, query = {}) {
         if (itemVal === value.$ne) return false;
         continue;
       }
+      if (value.$gte !== undefined) {
+        const a = itemVal instanceof Date ? itemVal.getTime() : itemVal;
+        const b = value.$gte instanceof Date ? value.$gte.getTime() : value.$gte;
+        if (!(a >= b)) return false;
+        continue;
+      }
+      if (value.$lte !== undefined) {
+        const a = itemVal instanceof Date ? itemVal.getTime() : itemVal;
+        const b = value.$lte instanceof Date ? value.$lte.getTime() : value.$lte;
+        if (!(a <= b)) return false;
+        continue;
+      }
+      if (value.$gt !== undefined) {
+        const a = itemVal instanceof Date ? itemVal.getTime() : itemVal;
+        const b = value.$gt instanceof Date ? value.$gt.getTime() : value.$gt;
+        if (!(a > b)) return false;
+        continue;
+      }
+      if (value.$lt !== undefined) {
+        const a = itemVal instanceof Date ? itemVal.getTime() : itemVal;
+        const b = value.$lt instanceof Date ? value.$lt.getTime() : value.$lt;
+        if (!(a < b)) return false;
+        continue;
+      }
     }
 
     if (itemVal !== value) {
@@ -302,11 +326,34 @@ function matchQuery(item, query = {}) {
   return true;
 }
 
+function wrapDoc(doc) {
+  if (!doc || typeof doc !== 'object') return doc;
+  if (!doc.save) {
+    doc.save = async function () {
+      if (this._id) {
+        const cIdx = inMemoryCertificates.findIndex((c) => String(c._id) === String(this._id));
+        if (cIdx >= 0) {
+          inMemoryCertificates[cIdx] = { ...inMemoryCertificates[cIdx], ...this, updatedAt: new Date() };
+        }
+        const aIdx = inMemoryAdmins.findIndex((a) => String(a._id) === String(this._id));
+        if (aIdx >= 0) {
+          inMemoryAdmins[aIdx] = { ...inMemoryAdmins[aIdx], ...this, updatedAt: new Date() };
+        }
+      }
+      return this;
+    };
+  }
+  if (!doc.toObject) doc.toObject = function () { return { ...this }; };
+  if (!doc.toJSON) doc.toJSON = function () { return { ...this }; };
+  if (doc.certificateId && !doc.amendmentHistory) doc.amendmentHistory = [];
+  return doc;
+}
+
 /**
  * Creates chainable Query simulator for Mongoose
  */
 function createQueryChain(resultData) {
-  let data = Array.isArray(resultData) ? [...resultData] : resultData;
+  let data = Array.isArray(resultData) ? resultData.map(wrapDoc) : wrapDoc(resultData);
 
   const chain = {
     sort: function (sortObj) {
@@ -424,10 +471,48 @@ export function enableMemoryFallback() {
       ...docData,
       createdAt: new Date(),
       updatedAt: new Date(),
+      amendmentHistory: docData.amendmentHistory || [],
       save: async function () { return this; },
     };
     inMemoryCertificates.unshift(newDoc);
     return newDoc;
+  };
+
+  Certificate.prototype.save = async function () {
+    const raw = this.toObject ? this.toObject() : { ...this };
+    if (!raw._id) {
+      raw._id = makeObjectId();
+      this._id = raw._id;
+    }
+    const idx = inMemoryCertificates.findIndex(
+      (c) => String(c._id) === String(raw._id) || (raw.certificateId && c.certificateId === raw.certificateId)
+    );
+    if (idx >= 0) {
+      inMemoryCertificates[idx] = {
+        ...inMemoryCertificates[idx],
+        ...raw,
+        updatedAt: new Date(),
+        amendmentHistory: inMemoryCertificates[idx].amendmentHistory || raw.amendmentHistory || [],
+        save: async function () { return this; },
+      };
+      Object.assign(this, inMemoryCertificates[idx]);
+    } else {
+      if (raw.certificateId && inMemoryCertificates.some((c) => c.certificateId === raw.certificateId)) {
+        const err = new Error(`E11000 duplicate key error collection: certificates index: certificateId_1 dup key: { certificateId: "${raw.certificateId}" }`);
+        err.code = 11000;
+        throw err;
+      }
+      const newEntry = {
+        ...raw,
+        createdAt: raw.createdAt || new Date(),
+        updatedAt: new Date(),
+        amendmentHistory: raw.amendmentHistory || [],
+        save: async function () { return this; },
+      };
+      inMemoryCertificates.unshift(newEntry);
+      Object.assign(this, newEntry);
+    }
+    return this;
   };
 
   // --- 2. Patch Admin Model ---
@@ -477,6 +562,24 @@ export function enableMemoryFallback() {
     return newAdmin;
   };
 
+  Admin.prototype.save = async function () {
+    const raw = this.toObject ? this.toObject() : { ...this };
+    if (!raw._id) {
+      raw._id = makeObjectId();
+      this._id = raw._id;
+    }
+    const idx = inMemoryAdmins.findIndex((a) => String(a._id) === String(raw._id));
+    if (idx >= 0) {
+      inMemoryAdmins[idx] = { ...inMemoryAdmins[idx], ...raw, updatedAt: new Date(), save: async function () { return this; } };
+      Object.assign(this, inMemoryAdmins[idx]);
+    } else {
+      const newAdmin = { ...raw, createdAt: new Date(), updatedAt: new Date(), save: async function () { return this; } };
+      inMemoryAdmins.unshift(newAdmin);
+      Object.assign(this, newAdmin);
+    }
+    return this;
+  };
+
   // --- 3. Patch CompanySettings Model ---
   CompanySettings.findOne = function () {
     return createQueryChain(inMemoryCompanySettings);
@@ -496,6 +599,13 @@ export function enableMemoryFallback() {
     return inMemoryCompanySettings;
   };
 
+  CompanySettings.prototype.save = async function () {
+    const raw = this.toObject ? this.toObject() : { ...this };
+    inMemoryCompanySettings = { ...inMemoryCompanySettings, ...raw, updatedAt: new Date(), save: async function () { return this; } };
+    Object.assign(this, inMemoryCompanySettings);
+    return this;
+  };
+
   // --- 4. Patch AuditLog Model ---
   AuditLog.create = async function (logData) {
     const log = {
@@ -505,6 +615,18 @@ export function enableMemoryFallback() {
     };
     inMemoryAuditLogs.unshift(log);
     return log;
+  };
+
+  AuditLog.prototype.save = async function () {
+    const raw = this.toObject ? this.toObject() : { ...this };
+    if (!raw._id) {
+      raw._id = makeObjectId();
+      this._id = raw._id;
+    }
+    const log = { ...raw, createdAt: raw.createdAt || new Date(), save: async function () { return this; } };
+    inMemoryAuditLogs.unshift(log);
+    Object.assign(this, log);
+    return this;
   };
 
   AuditLog.find = function (query) {
@@ -525,6 +647,18 @@ export function enableMemoryFallback() {
     };
     inMemoryOtps.unshift(otp);
     return otp;
+  };
+
+  OtpVerification.prototype.save = async function () {
+    const raw = this.toObject ? this.toObject() : { ...this };
+    if (!raw._id) {
+      raw._id = makeObjectId();
+      this._id = raw._id;
+    }
+    const otp = { ...raw, createdAt: raw.createdAt || new Date(), save: async function () { return this; } };
+    inMemoryOtps.unshift(otp);
+    Object.assign(this, otp);
+    return this;
   };
 
   OtpVerification.findOne = function (query) {

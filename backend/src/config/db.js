@@ -81,6 +81,7 @@ export async function connectDB() {
     // 3. Fallback for serverless / Netlify without any Cloud Database
     if (!connected) {
       console.log('[DB] Activating Standalone In-Memory Datastore (Zero Cloud Database required).');
+      mongoose.set('bufferCommands', false);
       enableMemoryFallback();
       connected = true;
     } else {
