@@ -248,12 +248,7 @@ export async function generateCertificatePdf(cert, req = null) {
          .text(cert.certificateId);
 
       doc.font('Helvetica-Bold')
-         .text(`Issue Date: `, metaX, qrY + 68, { continued: true })
-         .font('Helvetica')
-         .text(formatDate(cert.issueDate || cert.issuedAt));
-
-      doc.font('Helvetica-Bold')
-         .text(`Status: `, metaX, qrY + 82, { continued: true })
+         .text(`Status: `, metaX, qrY + 70, { continued: true })
          .fillColor(cert.status === 'ISSUED' ? '#15803d' : cert.status === 'REVOKED' ? '#b91c1c' : '#b45309')
          .text(cert.status === 'ISSUED' ? 'OFFICIALLY VALID' : cert.status);
 

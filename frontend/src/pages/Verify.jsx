@@ -711,13 +711,6 @@ export default function Verify() {
                     </div>
 
                     <div>
-                      <span className="text-slate-400 block font-medium">Issue Date</span>
-                      <span className="font-semibold text-slate-800 text-xs">
-                        {formatDate(verificationData.issueDate || verificationData.issuedAt)}
-                      </span>
-                    </div>
-
-                    <div>
                       <span className="text-slate-400 block font-medium">Training Duration</span>
                       <span className="font-bold text-emerald-700 text-xs">
                         {verificationData.durationDays} Days ({verificationData.trainingMode || 'Hybrid'} Mode)
