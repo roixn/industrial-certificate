@@ -16,7 +16,7 @@ async function seedDemoData() {
     let admin = await Admin.findOne({ email });
     if (!admin) {
       admin = await Admin.create({
-        name: 'Dr. Rajesh K. Sharma',
+        name: 'Rajesh K. Sharma',
         email,
         password: 'Admin@Pass2026!',
         role: 'superadmin',
@@ -35,7 +35,7 @@ async function seedDemoData() {
         email: 'certifications@nexora-tech.com',
         phone: '+91 (080) 4567-8900',
         website: 'https://nexora-innovations.com',
-        authorizedSignatory: 'Dr. Rajesh K. Sharma',
+        authorizedSignatory: 'Rajesh K. Sharma',
         signatoryDesignation: 'Director of Technical Training & Development',
         certificatePrefix: 'CERT',
         verificationDomain: 'http://localhost:5173/verify',

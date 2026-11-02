@@ -260,10 +260,12 @@ export async function generateCertificatePdf(cert, req = null) {
       doc.lineWidth(1).strokeColor(NAVY_DARK);
       doc.moveTo(signX, signY).lineTo(signX + 190, signY).stroke();
 
+      const cleanSignatoryName = (cert.signatoryName || 'Rajesh K. Sharma').replace(/^Dr\.?\s+/i, '');
+
       doc.fillColor(NAVY_DARK)
          .fontSize(11)
          .font('Helvetica-Bold')
-         .text(cert.signatoryName || 'Authorized Signatory', signX, signY + 6, { width: 190, align: 'center' });
+         .text(cleanSignatoryName, signX, signY + 6, { width: 190, align: 'center' });
 
       doc.fillColor(TEXT_MUTED)
          .fontSize(8.5)

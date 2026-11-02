@@ -20,7 +20,7 @@ export async function ensureInitialSeed() {
 
     const defaultEmail = (process.env.ADMIN_EMAIL || 'admin@nexora-tech.com').toLowerCase();
     const defaultPassword = process.env.ADMIN_PASSWORD || 'Admin@Pass2026!';
-    const defaultName = process.env.ADMIN_NAME || 'Dr. Rajesh K. Sharma';
+    const defaultName = process.env.ADMIN_NAME || 'Rajesh K. Sharma';
 
     if (adminCount === 0) {
       superAdmin = await Admin.create({
@@ -45,7 +45,7 @@ export async function ensureInitialSeed() {
         email: 'certifications@nexora-tech.com',
         phone: '+91 (080) 4567-8900',
         website: 'https://nexora-innovations.com',
-        authorizedSignatory: 'Dr. Rajesh K. Sharma',
+        authorizedSignatory: 'Rajesh K. Sharma',
         signatoryDesignation: 'Director of Technical Training & Development',
         certificatePrefix: 'CERT',
         verificationDomain: process.env.PUBLIC_VERIFY_BASE_URL || 'https://industrial-training-cert.vercel.app/credentials',

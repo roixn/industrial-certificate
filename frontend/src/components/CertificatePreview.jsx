@@ -224,15 +224,9 @@ export default function CertificatePreview({ cert, showActions = true, onDownloa
 
               {/* Right: Signatory */}
               <div className="text-center w-48 sm:w-56 pb-1">
-                {/* Visual signature stylized font or placeholder */}
-                <div className="h-7 sm:h-9 flex items-center justify-center">
-                  <span className="font-serif italic text-base sm:text-lg text-navy-900 font-bold tracking-wider opacity-90 select-none">
-                    {cert.signatoryName || 'R. K. Sharma'}
-                  </span>
-                </div>
-                <div className="w-full h-[1px] bg-slate-400 mx-auto mb-1" />
+                <div className="w-full h-[1px] bg-slate-400 mx-auto mb-1.5 mt-6" />
                 <p className="text-[10px] sm:text-xs font-bold text-navy-950">
-                  {cert.signatoryName || 'Dr. Rajesh K. Sharma'}
+                  {(cert.signatoryName || 'Rajesh K. Sharma').replace(/^Dr\.?\s+/i, '')}
                 </p>
                 <p className="text-[8px] sm:text-[9px] text-slate-500 font-medium">
                   {cert.signatoryDesignation || 'Director of Technical Training'}

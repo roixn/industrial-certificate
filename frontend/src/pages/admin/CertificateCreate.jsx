@@ -155,7 +155,7 @@ export default function CertificateCreate() {
     durationDays: 45,
     trainingMode: formValues.trainingMode,
     performanceGrade: formValues.performanceGrade,
-    signatoryName: companySettings?.authorizedSignatory || 'Dr. Rajesh K. Sharma',
+    signatoryName: companySettings?.authorizedSignatory || 'Rajesh K. Sharma',
     signatoryDesignation: companySettings?.signatoryDesignation || 'Director of Technical Training',
     companySnapshot: {
       name: companySettings?.companyName || 'Nexora Innovations Pvt. Ltd.',

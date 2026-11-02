@@ -30,7 +30,7 @@ function initData() {
   inMemoryAdmins = [
     {
       _id: adminId,
-      name: 'Dr. Rajesh K. Sharma',
+      name: 'Rajesh K. Sharma',
       email: 'admin@nexora-tech.com',
       password: hashedPassword,
       role: 'superadmin',
@@ -60,7 +60,7 @@ function initData() {
     email: 'certifications@nexora-tech.com',
     phone: '+91 (080) 4567-8900',
     website: 'https://nexora-innovations.com',
-    authorizedSignatory: 'Dr. Rajesh K. Sharma',
+    authorizedSignatory: 'Rajesh K. Sharma',
     signatoryDesignation: 'Director of Technical Training & Development',
     certificatePrefix: 'CERT',
     verificationDomain: process.env.PUBLIC_VERIFY_BASE_URL || 'https://industrial-training-cert.vercel.app/credentials',
@@ -239,7 +239,7 @@ function initData() {
       _id: makeObjectId(),
       action: 'CERTIFICATE_ISSUED',
       certificateId: 'CERT-2026-0001',
-      performedBy: { id: adminId, name: 'Dr. Rajesh K. Sharma', email: 'admin@nexora-tech.com' },
+      performedBy: { id: adminId, name: 'Rajesh K. Sharma', email: 'admin@nexora-tech.com' },
       reason: 'Initial demo issuance for Aarav Patel',
       createdAt: new Date('2026-07-16T10:00:00.000Z'),
     },

@@ -44,7 +44,7 @@ const companySettingsSchema = new mongoose.Schema(
     authorizedSignatory: {
       type: String,
       required: true,
-      default: 'Dr. Rajesh K. Sharma',
+      default: 'Rajesh K. Sharma',
       trim: true,
     },
     signatoryDesignation: {
