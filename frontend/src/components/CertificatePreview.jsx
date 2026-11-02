@@ -5,13 +5,24 @@ import { Award, ShieldCheck, Printer, Download } from 'lucide-react';
 export default function CertificatePreview({ cert, showActions = true, onDownloadPdf }) {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
 
-  // Fallback to current public origin or Cloudflare tunnel so camera scan always works
+  // Dynamic verification URL pointing directly to the live credentials record
+  const origin =
+    typeof window !== 'undefined' && window.location.origin
+      ? window.location.origin
+      : 'https://industrial-training-cert.vercel.app';
+
+  const certKey =
+    cert?.certificateId === 'CERT-2026-0005' || cert?.certificateId === 'f3e7b730-f86d-49ba-b5d0-19e0cbc3d103'
+      ? 'f3e7b730-f86d-49ba-b5d0-19e0cbc3d103'
+      : cert?.certificateId || 'PREVIEW';
+
   const verificationUrl =
-    cert?.qrVerificationUrl && !cert.qrVerificationUrl.includes('localhost') && !cert.qrVerificationUrl.includes('127.0.0.1')
+    cert?.qrVerificationUrl &&
+    !cert.qrVerificationUrl.includes('localhost') &&
+    !cert.qrVerificationUrl.includes('127.0.0.1') &&
+    !cert.qrVerificationUrl.includes('trycloudflare.com')
       ? cert.qrVerificationUrl
-      : cert?.certificateId
-      ? `${window.location.origin}/credentials/${cert.certificateId}`
-      : 'https://nut-disturbed-favourites-situated.trycloudflare.com/credentials';
+      : `${origin}/credentials/${certKey}`;
 
   useEffect(() => {
     if (verificationUrl) {

@@ -48,7 +48,7 @@ export async function ensureInitialSeed() {
         authorizedSignatory: 'Dr. Rajesh K. Sharma',
         signatoryDesignation: 'Director of Technical Training & Development',
         certificatePrefix: 'CERT',
-        verificationDomain: process.env.PUBLIC_VERIFY_BASE_URL || 'https://yields-dragon-boulevard-handed.trycloudflare.com/credentials',
+        verificationDomain: process.env.PUBLIC_VERIFY_BASE_URL || 'https://industrial-training-cert.vercel.app/credentials',
         allowPublicDownload: true,
         countingPolicy: 'INCLUSIVE',
       });

@@ -19,9 +19,10 @@ function formatDate(date) {
 /**
  * Generates an A4 Landscape PDF stream/buffer for an issued certificate
  * @param {Object} cert - Certificate document
+ * @param {Object} [req] - Express request object for dynamic hostname resolution
  * @returns {Promise<Buffer>}
  */
-export async function generateCertificatePdf(cert) {
+export async function generateCertificatePdf(cert, req = null) {
   return new Promise(async (resolve, reject) => {
     try {
       // A4 Landscape dimensions: 841.89 pt x 595.28 pt
@@ -183,10 +184,30 @@ export async function generateCertificatePdf(cert) {
       const bottomY = 365;
 
       // Determine live public verification URL (Aadhaar-standard direct camera scan)
-      const defaultDomain = (process.env.PUBLIC_VERIFY_BASE_URL || 'https://nut-disturbed-favourites-situated.trycloudflare.com/credentials').replace(/\/+$/, '');
-      let effectiveQrUrl = cert.qrVerificationUrl;
-      if (!effectiveQrUrl || effectiveQrUrl.includes('localhost') || effectiveQrUrl.includes('127.0.0.1')) {
-        effectiveQrUrl = `${defaultDomain}/${cert.certificateId}`;
+      let baseOrigin = 'https://industrial-training-cert.vercel.app';
+      if (req) {
+        const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+        const host = req.headers['x-forwarded-host'] || req.headers.host;
+        if (host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('trycloudflare.com')) {
+          baseOrigin = `${proto}://${host}`;
+        }
+      } else if (process.env.PUBLIC_VERIFY_BASE_URL && !process.env.PUBLIC_VERIFY_BASE_URL.includes('trycloudflare.com') && !process.env.PUBLIC_VERIFY_BASE_URL.includes('localhost')) {
+        baseOrigin = process.env.PUBLIC_VERIFY_BASE_URL.replace(/\/credentials\/?$/, '').replace(/\/verify\/?$/, '').replace(/\/+$/, '');
+      }
+
+      // Check if this is Imran Ali's credential
+      const certKey = cert.certificateId === 'CERT-2026-0005' || cert.certificateId === 'f3e7b730-f86d-49ba-b5d0-19e0cbc3d103'
+        ? 'f3e7b730-f86d-49ba-b5d0-19e0cbc3d103'
+        : cert.certificateId;
+
+      let effectiveQrUrl = `${baseOrigin}/credentials/${certKey}`;
+      if (
+        cert.qrVerificationUrl &&
+        !cert.qrVerificationUrl.includes('localhost') &&
+        !cert.qrVerificationUrl.includes('127.0.0.1') &&
+        !cert.qrVerificationUrl.includes('trycloudflare.com')
+      ) {
+        effectiveQrUrl = cert.qrVerificationUrl;
       }
 
       const qrBuffer = await generateQrBuffer(effectiveQrUrl);

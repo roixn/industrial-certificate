@@ -10,5 +10,5 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   cookieSecret: process.env.COOKIE_SECRET || 'industrial_cookie_secret_key_2026',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
-  publicVerifyBaseUrl: process.env.PUBLIC_VERIFY_BASE_URL || 'http://localhost:5173/verify',
+  publicVerifyBaseUrl: process.env.PUBLIC_VERIFY_BASE_URL || 'https://industrial-training-cert.vercel.app/credentials',
 };

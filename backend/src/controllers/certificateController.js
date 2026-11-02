@@ -46,8 +46,18 @@ export async function createCertificate(req, res, next) {
     // Generate unique Certificate ID on the server
     const certificateId = await generateUniqueCertificateId(settings.certificatePrefix);
 
-    // Build public verification URL
-    const baseUrl = settings.verificationDomain.replace(/\/+$/, '');
+    // Build public verification URL pointing to the live website
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    let baseOrigin = 'https://industrial-training-cert.vercel.app';
+    if (host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('trycloudflare.com')) {
+      baseOrigin = `${proto}://${host}`;
+    }
+
+    let baseUrl = `${baseOrigin}/credentials`;
+    if (settings.verificationDomain && !settings.verificationDomain.includes('trycloudflare.com') && !settings.verificationDomain.includes('localhost')) {
+      baseUrl = settings.verificationDomain.replace(/\/+$/, '');
+    }
     const qrVerificationUrl = `${baseUrl}/${certificateId}`;
 
     // Company Snapshot
@@ -452,7 +462,7 @@ export async function downloadCertificatePdf(req, res, next) {
       return res.status(404).json({ success: false, message: 'Certificate not found' });
     }
 
-    const pdfBuffer = await generateCertificatePdf(cert);
+    const pdfBuffer = await generateCertificatePdf(cert, req);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Certificate_${cert.certificateId}.pdf"`);

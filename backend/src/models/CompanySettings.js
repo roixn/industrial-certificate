@@ -62,7 +62,7 @@ const companySettingsSchema = new mongoose.Schema(
     verificationDomain: {
       type: String,
       required: true,
-      default: 'http://localhost:5173/verify',
+      default: 'https://industrial-training-cert.vercel.app/credentials',
       trim: true,
     },
     allowPublicDownload: {

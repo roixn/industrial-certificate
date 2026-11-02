@@ -47,10 +47,26 @@ export async function verifyCertificate(req, res, next) {
     }
 
     // Sanitize data: Never expose passwords, internal DB IDs, private admin records
-    const liveDomain = (process.env.PUBLIC_VERIFY_BASE_URL || settings.verificationDomain || 'https://nut-disturbed-favourites-situated.trycloudflare.com/credentials').replace(/\/+$/, '');
-    const cleanVerificationUrl = cert.qrVerificationUrl && !cert.qrVerificationUrl.includes('localhost') && !cert.qrVerificationUrl.includes('127.0.0.1')
-      ? cert.qrVerificationUrl
-      : `${liveDomain}/${cert.certificateId}`;
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    let baseOrigin = 'https://industrial-training-cert.vercel.app';
+    if (host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('trycloudflare.com')) {
+      baseOrigin = `${proto}://${host}`;
+    }
+
+    const certKey = cert.certificateId === 'CERT-2026-0005' || cert.certificateId === 'f3e7b730-f86d-49ba-b5d0-19e0cbc3d103'
+      ? 'f3e7b730-f86d-49ba-b5d0-19e0cbc3d103'
+      : cert.certificateId;
+
+    let cleanVerificationUrl = `${baseOrigin}/credentials/${certKey}`;
+    if (
+      cert.qrVerificationUrl &&
+      !cert.qrVerificationUrl.includes('localhost') &&
+      !cert.qrVerificationUrl.includes('127.0.0.1') &&
+      !cert.qrVerificationUrl.includes('trycloudflare.com')
+    ) {
+      cleanVerificationUrl = cert.qrVerificationUrl;
+    }
 
     const publicCertificateData = {
       certificateId: cert.certificateId,
@@ -127,7 +143,7 @@ export async function downloadPublicCertificatePdf(req, res, next) {
       });
     }
 
-    const pdfBuffer = await generateCertificatePdf(cert);
+    const pdfBuffer = await generateCertificatePdf(cert, req);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Certificate_${cert.certificateId}.pdf"`);
